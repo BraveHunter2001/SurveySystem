@@ -1,0 +1,40 @@
+networks:
+  dev:
+    driver: bridge
+
+services:
+  postgres:
+    container_name: postgres_container
+    image: 'postgres:latest'
+    environment:
+      POSTGRES_USER: pgadmin
+      POSTGRES_PASSWORD: pgadmin
+      PGDATA: /data/postgres
+      POSTGRES_DB: SurveySystemdb
+    volumes:
+       - postgres:/data/postgres
+    ports:
+      - "5432:5432"
+    restart: always
+    networks:
+        - dev
+
+  webapi:
+    container_name: webapi
+    image: ${DOCKER_REGISTRY-}webapi
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80 
+    ports:
+      - "5000:80"
+    networks:
+        - dev
+    depends_on:
+      postgres:
+        condition: service_started
+
+volumes:
+    postgres:
